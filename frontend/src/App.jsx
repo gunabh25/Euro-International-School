@@ -1,17 +1,20 @@
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
-import StudentDetails from "./pages/StudentDetails";
 import Dashboard from "./pages/Dashboard";
+import StudentDetails from "./pages/StudentDetails";
 
 function App() {
-    return (
-        <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/student/:admissionNo" element={<StudentDetails />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-    );
+  return (
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/student/:admission_no"
+          element={<StudentDetails />}
+        />
+      </Routes>
+  );
 }
 
 export default App;
