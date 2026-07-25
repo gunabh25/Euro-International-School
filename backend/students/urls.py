@@ -21,13 +21,13 @@ urlpatterns = [
     ),
 
     path(
-        "summary/",
+        "students/<str:admission_no>/summary/",
         SummaryAPIView.as_view(),
         name="summary",
     ),
 
     path(
-        "marks/corrections/",
+        "students/<str:admission_no>/correct/",
         CorrectionAPIView.as_view(),
         name="correction",
     ),
