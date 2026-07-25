@@ -24,13 +24,9 @@ class Command(BaseCommand):
         Mark.objects.all().delete()
         Student.objects.all().delete()
 
-        csv_path = (
-            Path(__file__)
-            .resolve()
-            .parents[4]
-            / "data"
-            / "students_marks.csv"
-        )
+        BASE_DIR = Path(__file__).resolve().parents[3]
+
+        csv_path = BASE_DIR / "data" / "students_marks.csv"
 
         if not csv_path.exists():
             self.stdout.write(
