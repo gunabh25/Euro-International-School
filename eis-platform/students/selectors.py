@@ -3,30 +3,41 @@ from django.db.models import Avg, Sum
 from .models import Student, Mark
 
 
-def search_students(search_text=None):
+def search_students(search=None):
+    """
+    Return all students or search by name (case-insensitive).
+    """
+
     queryset = Student.objects.all()
 
-    if search_text:
-        queryset = queryset.filter(name__icontains=search_text)
+    if search:
+        queryset = queryset.filter(
+            name__icontains=search.strip()
+        )
 
     return queryset.order_by("name")
 
 
-def get_student(admission_no):
-    return Student.objects.prefetch_related(
-        "marks"
-    ).filter(
-        admission_no=admission_no
-    ).first()
+def get_student_by_admission(admission_no):
+    """
+    Fetch one student with all marks.
+    """
 
-
-def get_student_marks(student):
-    return student.marks.all()
+    return (
+        Student.objects.prefetch_related("marks")
+        .filter(admission_no=admission_no)
+        .first()
+    )
 
 
 def get_subject_averages():
+    """
+    Average marks per subject excluding absents.
+    """
+
     return (
-        Mark.objects.exclude(marks_obtained__isnull=True)
+        Mark.objects
+        .exclude(marks_obtained__isnull=True)
         .values("subject")
         .annotate(
             average=Avg("marks_obtained")
@@ -36,17 +47,21 @@ def get_subject_averages():
 
 
 def get_top_student():
-    students = Student.objects.prefetch_related("marks")
+    """
+    Student with highest total marks.
+    """
 
     best_student = None
     best_total = -1
 
+    students = Student.objects.prefetch_related("marks")
+
     for student in students:
 
         total = (
-            student.marks.exclude(
-                marks_obtained__isnull=True
-            ).aggregate(
+            student.marks
+            .exclude(marks_obtained__isnull=True)
+            .aggregate(
                 total=Sum("marks_obtained")
             )["total"]
             or 0

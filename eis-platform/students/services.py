@@ -1,10 +1,12 @@
+from django.db import transaction
+
+from .constants import SUBJECTS
+from .models import Mark
+
 from .selectors import (
-    get_student_marks,
     get_subject_averages,
     get_top_student,
 )
-
-from .models import Mark
 
 
 class StudentService:
@@ -12,71 +14,78 @@ class StudentService:
     @staticmethod
     def calculate_total(student):
 
-        total = 0
-
-        for mark in get_student_marks(student):
-
-            if mark.marks_obtained is not None:
-                total += mark.marks_obtained
-
-        return total
+        return sum(
+            mark.marks_obtained
+            for mark in student.marks.all()
+            if mark.marks_obtained is not None
+        )
 
     @staticmethod
     def calculate_average(student):
 
-        marks = []
-
-        for mark in get_student_marks(student):
-
-            if mark.marks_obtained is not None:
-                marks.append(mark.marks_obtained)
+        marks = [
+            mark.marks_obtained
+            for mark in student.marks.all()
+            if mark.marks_obtained is not None
+        ]
 
         if not marks:
-            return 0
+            return 0.0
 
         return round(sum(marks) / len(marks), 1)
 
     @staticmethod
-    def get_summary():
+    def build_summary():
 
         averages = []
 
-        for subject in get_subject_averages():
+        for item in get_subject_averages():
 
             averages.append(
                 {
-                    "subject": subject["subject"],
-                    "average": round(subject["average"], 1),
+                    "subject": item["subject"],
+                    "average": round(item["average"], 1),
                 }
             )
 
-        top_student, total = get_top_student()
+        student, total = get_top_student()
 
         return {
             "subject_averages": averages,
             "top_student": {
-                "admission_no": top_student.admission_no,
-                "name": top_student.name,
+                "admission_no": student.admission_no,
+                "name": student.name,
                 "total": total,
             },
         }
 
     @staticmethod
+    @transaction.atomic
     def apply_correction(
         admission_no,
         subject,
         marks,
     ):
 
-        mark = Mark.objects.select_related(
-            "student"
-        ).get(
-            student__admission_no=admission_no,
-            subject=subject,
+        if subject not in SUBJECTS:
+            raise ValueError("Invalid subject")
+
+        mark = (
+            Mark.objects
+            .select_related("student")
+            .filter(
+                student__admission_no=admission_no,
+                subject=subject,
+            )
+            .first()
         )
 
-        mark.marks_obtained = marks
+        if not mark:
+            raise ValueError(
+                "Student or subject not found"
+            )
 
+        mark.marks_obtained = marks
         mark.save()
 
         return mark
