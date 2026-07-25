@@ -9,7 +9,8 @@ SUBJECTS = [
 DATE_FORMATS = [
     "%Y-%m-%d",
     "%d/%m/%Y",
-    "%d-%b-%Y",
+    "%d-%b-%y",
+    "%d-%m-%Y",
 ]
 
 CSV_COLUMNS = {
@@ -20,4 +21,5 @@ CSV_COLUMNS = {
     "dob": "date_of_birth",
     "subject": "subject",
     "marks": "marks_obtained",
+    "max_marks": "max_marks",
 }
