@@ -7,8 +7,8 @@ const api = axios.create({
 export const getStudents = (search = "") =>
   api.get(`/students/?search=${search}`);
 
-export const getStudent = (admission) =>
-  api.get(`/students/${admission}/`);
+export const getStudent = (admissionNo) =>
+  api.get(`/students/${admissionNo}/`);
 
 export const getSummary = (admission) =>
   api.get(`/students/${admission}/summary/`);

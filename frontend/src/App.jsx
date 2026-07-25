@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
-import StudentDetails from "./pages/StudentPage";
+import StudentPage from "./pages/StudentPage";
 
 function App() {
   return (
@@ -10,8 +10,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route
-          path="/student/:admission_no"
-          element={<StudentDetails />}
+          path="/student/:admissionNo"
+          element={<StudentPage />}
         />
       </Routes>
   );
