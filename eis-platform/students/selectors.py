@@ -1,31 +1,59 @@
-"""
-Selectors are responsible for reading data from the database.
-No business logic should be written here.
-"""
+from django.db.models import Avg, Sum
 
 from .models import Student, Mark
 
 
-def get_student_by_admission(admission_no):
-    """
-    Fetch a student using admission number.
-    """
-    return Student.objects.filter(
+def search_students(search_text=None):
+    queryset = Student.objects.all()
+
+    if search_text:
+        queryset = queryset.filter(name__icontains=search_text)
+
+    return queryset.order_by("name")
+
+
+def get_student(admission_no):
+    return Student.objects.prefetch_related(
+        "marks"
+    ).filter(
         admission_no=admission_no
     ).first()
 
 
-def search_students(search_text):
-    """
-    Case-insensitive student search.
-    """
-    return Student.objects.filter(
-        name__icontains=search_text
+def get_student_marks(student):
+    return student.marks.all()
+
+
+def get_subject_averages():
+    return (
+        Mark.objects.exclude(marks_obtained__isnull=True)
+        .values("subject")
+        .annotate(
+            average=Avg("marks_obtained")
+        )
+        .order_by("subject")
     )
 
 
-def get_all_marks(student):
-    """
-    Return all marks for a student.
-    """
-    return Mark.objects.filter(student=student)
+def get_top_student():
+    students = Student.objects.prefetch_related("marks")
+
+    best_student = None
+    best_total = -1
+
+    for student in students:
+
+        total = (
+            student.marks.exclude(
+                marks_obtained__isnull=True
+            ).aggregate(
+                total=Sum("marks_obtained")
+            )["total"]
+            or 0
+        )
+
+        if total > best_total:
+            best_total = total
+            best_student = student
+
+    return best_student, best_total
