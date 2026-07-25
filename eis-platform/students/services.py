@@ -3,16 +3,17 @@ from django.db import transaction
 from .constants import SUBJECTS
 from .models import Mark
 
-from .selectors import (
-    get_subject_averages,
-    get_top_student,
-)
-
 
 class StudentService:
+    """
+    Business logic for students and marks.
+    """
 
     @staticmethod
     def calculate_total(student):
+        """
+        Calculate total marks excluding absent subjects.
+        """
 
         return sum(
             mark.marks_obtained
@@ -22,6 +23,9 @@ class StudentService:
 
     @staticmethod
     def calculate_average(student):
+        """
+        Calculate average excluding absent subjects.
+        """
 
         marks = [
             mark.marks_obtained
@@ -35,11 +39,51 @@ class StudentService:
         return round(sum(marks) / len(marks), 1)
 
     @staticmethod
-    def build_summary():
+    def get_student_marks(student):
+        """
+        Return marks in assignment format.
+        """
+
+        result = []
+
+        for mark in student.marks.all():
+
+            result.append(
+                {
+                    "subject": mark.subject,
+                    "marks": mark.marks_obtained,
+                    "max_marks": mark.max_marks,
+                }
+            )
+
+        return result
+
+    @staticmethod
+    def build_student_response(student):
+        """
+        Build response for Student Detail API.
+        """
+
+        return {
+            "admission_no": student.admission_no,
+            "name": student.name,
+            "class": student.student_class,
+            "section": student.section,
+            "dob": student.date_of_birth,
+            "marks": StudentService.get_student_marks(student),
+            "total": StudentService.calculate_total(student),
+            "average": StudentService.calculate_average(student),
+        }
+
+    @staticmethod
+    def build_summary(subject_averages, top_student, total):
+        """
+        Build Summary API response.
+        """
 
         averages = []
 
-        for item in get_subject_averages():
+        for item in subject_averages:
 
             averages.append(
                 {
@@ -48,13 +92,11 @@ class StudentService:
                 }
             )
 
-        student, total = get_top_student()
-
         return {
             "subject_averages": averages,
             "top_student": {
-                "admission_no": student.admission_no,
-                "name": student.name,
+                "admission_no": top_student.admission_no,
+                "name": top_student.name,
                 "total": total,
             },
         }
@@ -66,9 +108,18 @@ class StudentService:
         subject,
         marks,
     ):
+        """
+        Apply mark correction.
+        """
 
         if subject not in SUBJECTS:
-            raise ValueError("Invalid subject")
+            raise ValueError("Invalid subject.")
+
+        if not isinstance(marks, int):
+            raise ValueError("Marks must be integer.")
+
+        if marks < 0 or marks > 100:
+            raise ValueError("Marks should be between 0 and 100.")
 
         mark = (
             Mark.objects
@@ -80,9 +131,9 @@ class StudentService:
             .first()
         )
 
-        if not mark:
+        if mark is None:
             raise ValueError(
-                "Student or subject not found"
+                "Student or subject not found."
             )
 
         mark.marks_obtained = marks
