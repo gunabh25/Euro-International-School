@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from .selectors import (
     search_students,
-    get_student,
+    get_student_by_admission,
 )
 
 from .serializers import (
@@ -36,7 +36,7 @@ class StudentDetailAPIView(APIView):
 
     def get(self, request, admission_no):
 
-        student = get_student(admission_no)
+        student = get_student_by_admission(admission_no)
 
         if not student:
             return Response(
